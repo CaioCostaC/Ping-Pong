@@ -64,10 +64,21 @@ const rightPaddle = {
     y: 200,
     w: line.w,
     h: 200,
+    speed: 5,
 
-    //Função para animar a raquete direita de acordo com a bolinha
+    //Função para alterar a velocidade da raquete
+    _speedUp: function(){
+        this.speed += 2;
+    },
+
+    //Função para animar a raquete direita
     _move: function(){
-        this.y = ball.y;
+        if (this.y + this.h / 2 < ball.y + ball.r){
+            this.y += this.speed;
+        }
+        else{
+            this.y -= this.speed;
+        }
     },
 
     //Método que irá desenhar a raquete direita
@@ -86,10 +97,20 @@ const rightPaddle = {
 
 //Criação do objeto PLACAR
 const score = {
-    human: 1,
-    computer: 2,
+    human: 0,
+    computer: 0,
 
-    //Método que orá desenhar o placar
+    //Adição de pontos para o humano
+    increaseHuman: function(){
+        this.human++;
+    },
+
+    //Adição de pontos para o computador
+    increaseComputer: function(){
+        this.computer++;
+    },
+
+    //Método que irá desenhar o placar
     draw: function(){
         //Desenhando o placar
         canvasCtx.font = "bold 72px Arial"; //Definindo a fonte do texto no placar
@@ -103,8 +124,8 @@ const score = {
 
 //Criação do objeto BOLA
 const ball = {
-    x: 0,
-    y: 0,
+    x: field.w  / 2,
+    y: field.h / 2,
     r: 20,
     speed: 5, //Velocidade da bola
     directionX: 1, //Diz qual a direção de movimento da bolinha (1 -> Baixo | -1 -> Cima)
@@ -112,6 +133,30 @@ const ball = {
 
     //Função para calcular a posição
     _calcPosition: function(){
+        //Verifica se o jogador 1 fez um ponto (x > Largura do campo)
+        if (this.x > field.w - this.r - rightPaddle.w - gapX){
+            //Verifica se a raquete direita está na posição y da bola
+            if (this.y + this.r > rightPaddle.y && this.y - this.r < rightPaddle.y + rightPaddle.h){
+                this._reverseX(); //Rebate a bola invertendo o sinal de x
+            }
+            //Caso for falso, pontuar o jogador 1
+            else {
+                score.increaseHuman();
+                this._pointUp();
+            }
+        } 
+        //Verifica se o computador fez o ponto
+        else if (this.x < 0 + this.r + lefetPaddle.w + gapX){
+            //Verifica se a raquete esquerda está na posição y da bola
+            if (this.y + this.r > lefetPaddle.y && this.y - this.r < lefetPaddle.y + rightPaddle.h){
+                this._reverseX();
+            }
+            else {
+                score.increaseComputer();
+                this._pointUp();
+            }
+        }
+
         //Condição para rebate na parte inferior da tela
         if ( (this.y - this.r < 0 && this.directionY < 0) || (this.y > field.h - this.r && this.directionY > 0)){
             this._reverseY(); 
@@ -123,6 +168,18 @@ const ball = {
     },
     _reverseY: function(){
         this.directionY = this.directionY * (-1); //Função para inverter a somátoria do Y
+    },
+    //Função para acelerar a bolinha
+    _speedUp: function (){
+        this.speed += 2;
+    },
+    //Função para centralizar a bolinha após pontuação
+    _pointUp: function(){
+        this._speedUp();
+        rightPaddle._speedUp();
+
+        this.x = field.w / 2;
+        this.y = field.h / 2;
     },
     //Função responsável por modificar a propriedade x e y
     _move: function(){
